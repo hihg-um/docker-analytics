@@ -2,27 +2,33 @@ ORG_NAME := hihg-um
 PROJECT_NAME ?= docker-analytics
 
 IMAGE_REPOSITORY :=
-IMAGE := $(ORG_NAME)/$(PROJECT_NAME):latest
-
+IMAGE := $(PROJECT_NAME):latest
 # Use this for debugging builds. Turn off for a more slick build log
 DOCKER_BUILD_ARGS := --progress=plain
 
-.PHONY: all build clean test tests
+TOOLS = bcftools plink plink2 samtools vcftools
+.PHONY: all build clean docker test tests $(TOOLS)
 
-all: docker test
+all: docker
 
-test: docker
-	@docker run -t $(IMAGE) R --version > /dev/null
+test: $(TOOLS)
 
-tests: test
+        ifeq ($@,'plink')
+		@docker run -it $(ORG_NAME)/$@ --noweb --version
+        else
+		@docker run -it $(ORG_NAME)/$@ --version
+        endif
 
 clean:
 	@docker rmi $(IMAGE)
 
-docker:
-	@docker build -t $(IMAGE) \
+docker: $(TOOLS)
+
+$(TOOLS):
+	@docker build -t $(ORG_NAME)/$@ \
 		$(DOCKER_BUILD_ARGS) \
-	  .
+		--build-arg RUNCMD="$@" \
+		.
 
 release:
 	docker push $(IMAGE_REPOSITORY)/$(IMAGE)

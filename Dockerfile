@@ -17,4 +17,8 @@ RUN apt -y update -qq && apt -y upgrade && \
 
 # analytics packages
 RUN DEBIAN_FRONTEND=noninteractive apt -y install \
-	bcftools plink plink2 samtools vcftools
+	bcftools plink plink2 samtools vcftools && ln -s /usr/bin/plink1 /usr/bin/plink
+
+ARG RUNCMD
+RUN echo "$RUNCMD \$@" > /entrypoint.sh && chmod +x /entrypoint.sh
+ENTRYPOINT [ "bash", "/entrypoint.sh" ]

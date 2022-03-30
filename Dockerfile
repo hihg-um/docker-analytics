@@ -12,13 +12,13 @@ RUN apt -y update -qq && apt -y upgrade && \
 		less libfile-pushd-perl libhts3 \
 		python3 python3-pip \
 		pkg-config \
-		r-base r-base-core r-recommended \
 		software-properties-common \
-		strace tabix wget xz-utils zlib1g
+		strace wget xz-utils zlib1g
 
 # analytics packages
+ARG IMAGE_TOOLS
 RUN DEBIAN_FRONTEND=noninteractive apt -y install \
-	bcftools plink plink2 samtools vcftools && ln -s /usr/bin/plink1 /usr/bin/plink
+	${IMAGE_TOOLS} && ln -s /usr/bin/plink1 /usr/bin/plink
 
 ARG RUNCMD
 RUN echo "$RUNCMD \$@" > /entrypoint.sh && chmod +x /entrypoint.sh

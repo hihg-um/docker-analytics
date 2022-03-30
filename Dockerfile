@@ -1,4 +1,5 @@
-FROM ubuntu:22.04
+ARG BASE_IMAGE
+FROM $BASE_IMAGE
 
 # Install OS updates, security fixes and utils, generic app dependencies
 # htslib is libhts3 in Ubuntu see https://github.com/samtools/htslib/

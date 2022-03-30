@@ -1,5 +1,7 @@
 ORG_NAME := hihg-um
 PROJECT_NAME ?= docker-analytics
+OS_BASE ?= ubuntu
+OS_VER ?= 22.04
 
 IMAGE_REPOSITORY :=
 IMAGE := $(PROJECT_NAME):latest
@@ -25,8 +27,9 @@ clean:
 docker: $(TOOLS)
 
 $(TOOLS):
-	@docker build -t $(ORG_NAME)/$@ \
+	@docker build -t $(ORG_NAME)/$@_$(OS_BASE)-$(OS_VER) \
 		$(DOCKER_BUILD_ARGS) \
+		--build-arg BASE_IMAGE=$(OS_BASE):$(OS_VER) \
 		--build-arg RUNCMD="$@" \
 		.
 

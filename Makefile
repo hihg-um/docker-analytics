@@ -3,8 +3,12 @@ PROJECT_NAME ?= docker-analytics
 OS_BASE ?= ubuntu
 OS_VER ?= 22.04
 
+USER ?= `whoami`
+USERID := `id -u`
+USERGID := `id -g`
+
 IMAGE_REPOSITORY :=
-IMAGE := $(PROJECT_NAME):latest
+IMAGE := $(USER)/$(PROJECT_NAME):latest
 # Use this for debugging builds. Turn off for a more slick build log
 DOCKER_BUILD_ARGS := --progress=plain
 
@@ -27,10 +31,13 @@ clean:
 docker: $(TOOLS)
 
 $(TOOLS):
-	@docker build -t $(ORG_NAME)/$@ \
+	@docker build -t $(ORG_NAME)/$(USER)/$@ \
 		$(DOCKER_BUILD_ARGS) \
 		--build-arg BASE_IMAGE=$(OS_BASE):$(OS_VER) \
 		--build-arg IMAGE_TOOLS="$(TOOLS)" \
+		--build-arg USERNAME=$(USER) \
+		--build-arg USERID=$(USERID) \
+		--build-arg USERGID=$(USERGID) \
 		--build-arg RUNCMD="$@" \
 		.
 

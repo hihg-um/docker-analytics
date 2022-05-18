@@ -1,6 +1,8 @@
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
 
+# SPDX-License-Identifier: GPL-2.0
+
 # List of analytics tools
 ARG IMAGE_TOOLS
 

@@ -1,7 +1,12 @@
 # Docker / Analytics projects
 
-this container packages several common analytics tools that are packaged by
-the Ubuntu distro maintainers:
+Author: Sven-Thorsten Dietrich <sxd1425 _at_ @miami.edu>
+
+This code is made available under the GPL-2.0 license.
+Please see the LICENSE file for details.
+
+This container packages several common analytics tools that
+are packaged by the Ubuntu Linux distribution maintainers:
 
  - bcftools
  - plink

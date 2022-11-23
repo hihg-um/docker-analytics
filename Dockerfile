@@ -10,6 +10,7 @@ ARG IMAGE_TOOLS
 # without these, the container will fail-safe and be unable to write output
 ARG USERNAME
 ARG USERID
+ARG USERGNAME
 ARG USERGID
 
 ARG RUNCMD
@@ -21,7 +22,9 @@ ENV USERNAME=${USERNAME:-nouser} \
 
 # match the building user. This will allow output only where the building
 # user has write permissions
-RUN useradd -m -u $USERID -g $USERGID $USERNAME
+RUN groupadd -g $USERGID $USERGNAME && \
+	useradd -m -u $USERID -g $USERGID $USERNAME && \
+	adduser $USERNAME $USERGNAME
 
 # Install OS updates, security fixes and utils, generic app dependencies
 # htslib is libhts3 in Ubuntu see https://github.com/samtools/htslib/

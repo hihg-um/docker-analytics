@@ -18,6 +18,7 @@ ARG RUNCMD
 # Put the user name and ID into the ENV, so the runtime inherits them
 ENV USERNAME=${USERNAME:-nouser} \
         USERID=${USERID:-65533} \
+        USERGNAME=${USERGNAME:-users} \
         USERGID=${USERGID:-nogroup}
 
 # match the building user. This will allow output only where the building
@@ -34,20 +35,17 @@ RUN apt -y update -qq && apt -y upgrade && \
 		curl \
 		dirmngr \
 		ghostscript gnuplot \
-		less libfile-pushd-perl libhts3 \
-		python3 python3-pip \
+		less \
 		pkg-config \
 		software-properties-common \
-		strace wget xz-utils zlib1g
+		strace wget xz-utils
 
-# analytics packages
-RUN DEBIAN_FRONTEND=noninteractive apt -y install \
-	${IMAGE_TOOLS} && ln -s /usr/bin/plink1 /usr/bin/plink
-
-
+# analytics package target - we want a new layer here, since different
+# dependencies will have to be installed, but we want a common base
+RUN DEBIAN_FRONTEND=noninteractive apt -y install ${RUNCMD}
 RUN echo "$RUNCMD \$@" > /entrypoint.sh && chmod +x /entrypoint.sh
 
+WORKDIR /app
 # we map the user owning the image so permissions for input/output will work
 USER $USERNAME
-
 ENTRYPOINT [ "bash", "/entrypoint.sh" ]

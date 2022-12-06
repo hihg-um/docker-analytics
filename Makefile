@@ -16,7 +16,7 @@ DOCKER_TAG := latest
 # Use this for debugging builds. Turn off for a more slick build log
 DOCKER_BUILD_ARGS := --progress=plain
 
-TOOLS := bcftools plink plink2 samtools tabix vcftools
+TOOLS := bcftools plink2 samtools shapeit4 tabix vcftools
 SIF_IMAGES := $(TOOLS:=\:$(DOCKER_TAG).svf)
 DOCKER_IMAGES := $(TOOLS:=\:$(DOCKER_TAG))
 
@@ -44,21 +44,19 @@ $(TOOLS):
 		--build-arg USERGID=$(USERGID) \
 		--build-arg RUNCMD="$@" \
 		.
+	@echo "Testing docker image: $(DOCKER_IMAGE_BASE)/$@"
+	@docker run -it -v /mnt:/mnt $(DOCKER_IMAGE_BASE)/$@ --version
 
-docker_test: $(DOCKER_IMAGES)
-	@echo "Testing docker image: $(ORG_NAME)/$@"
-	ifeq ($@,'plink')
-		@docker run -it -v /mnt:/mnt $(ORG_NAME)/$@ --noweb --version
-	else
-		@docker run -it -v /mnt:/mnt $(ORG_NAME)/$@ --version
-	endif
+test_docker: $(TOOLS)
+	@echo "Testing docker image: $(DOCKER_IMAGE_BASE)/$<"
+	@docker run -it -v /mnt:/mnt $(DOCKER_IMAGE_BASE)/$@ --version
 
-singularity: singularity_test
+singularity: $(SIF_IMAGES) test_singularity
 
 $(SIF_IMAGES): $(TOOLS)
 	@singularity build $@ docker-daemon:$(DOCKER_IMAGE_BASE)/$(@:=
 
-singularity_test: $(SIF_IMAGES)
+test_singularity: $(SIF_IMAGES)
 	@echo "Testing singularity image: $@"
 	@singularity run $(ORG_NAME)/$@ -v
 

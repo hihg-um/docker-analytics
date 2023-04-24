@@ -24,7 +24,7 @@ ENV USERNAME=${USERNAME:-nouser} \
 # match the building user. This will allow output only where the building
 # user has write permissions
 RUN groupadd -g $USERGID $USERGNAME && \
-	useradd -m -u $USERID -g $USERGID $USERNAME && \
+	useradd -m -u $USERID -g $USERGID -g "users" $USERNAME && \
 	adduser $USERNAME $USERGNAME
 
 # Install OS updates, security fixes and utils, generic app dependencies

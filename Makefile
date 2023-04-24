@@ -18,14 +18,14 @@ DOCKER_BUILD_ARGS := --progress=plain
 
 TOOLS := bcftools plink2 samtools shapeit4 tabix vcftools
 SIF_IMAGES := $(TOOLS:=\:$(DOCKER_TAG).svf)
+#SIF_IMAGES := $(TOOLS)
 DOCKER_IMAGES := $(TOOLS:=\:$(DOCKER_TAG))
 
 .PHONY: clean docker test $(TOOLS)
 
-all:
-	@echo $(SIF_IMAGES) $(DOCKER_IMAGES)
+all: docker test_docker apptainer test_apptainer
 
-test: test_docker test_singularity
+test: test_docker test_apptainer
 
 clean:
 	@docker rmi $(DOCKER_IMAGES)
@@ -44,21 +44,21 @@ $(TOOLS):
 		--build-arg USERGID=$(USERGID) \
 		--build-arg RUNCMD="$@" \
 		.
-	@echo "Testing docker image: $(DOCKER_IMAGE_BASE)/$@"
-	@docker run -it -v /mnt:/mnt $(DOCKER_IMAGE_BASE)/$@ --version
 
 test_docker: $(TOOLS)
 	@echo "Testing docker image: $(DOCKER_IMAGE_BASE)/$<"
-	@docker run -it -v /mnt:/mnt $(DOCKER_IMAGE_BASE)/$@ --version
+	@docker run -it -v /mnt:/mnt $(DOCKER_IMAGE_BASE)/$< --version
 
-singularity: $(SIF_IMAGES) test_singularity
+apptainer: $(SIF_IMAGES)
+	make test_apptainer
 
-$(SIF_IMAGES): $(TOOLS)
-	@singularity build $@ docker-daemon:$(DOCKER_IMAGE_BASE)/$(@:=
+$(SIF_IMAGES):
+	echo "Building $@"
+	@apptainer build $@ docker-daemon:$(DOCKER_IMAGE_BASE)/$(patsubst %.svf,%,$@)
 
-test_singularity: $(SIF_IMAGES)
-	@echo "Testing singularity image: $@"
-	@singularity run $(ORG_NAME)/$@ -v
+test_apptainer: $(SIF_IMAGES)
+	@echo "Testing apptainer image: $<"
+	@apptainer run $< -v
 
 release: $(DOCKER_IMAGES)
 	@docker push $(IMAGE_REPOSITORY)/$(ORG_NAME)/$(USER)/$@

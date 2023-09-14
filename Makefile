@@ -14,7 +14,7 @@ DOCKER_IMAGE_BASE := $(ORG_NAME)/$(USER)
 DOCKER_TAG := latest
 
 # Use this for debugging builds. Turn off for a more slick build log
-DOCKER_BUILD_ARGS := --progress=plain
+DOCKER_BUILD_ARGS :=
 
 TOOLS := bcftools plink2 samtools shapeit4 tabix vcftools
 SIF_IMAGES := $(TOOLS:=\:$(DOCKER_TAG).svf)

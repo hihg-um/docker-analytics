@@ -17,7 +17,7 @@ DOCKER_TAG := latest
 DOCKER_BUILD_ARGS :=
 
 TOOLS := bcftools plink2 samtools shapeit4 tabix vcftools
-SIF_IMAGES := $(TOOLS:=\:$(DOCKER_TAG).svf)
+SIF_IMAGES := $(TOOLS:=\:$(DOCKER_TAG).sif)
 #SIF_IMAGES := $(TOOLS)
 DOCKER_IMAGES := $(TOOLS:=\:$(DOCKER_TAG))
 
@@ -29,7 +29,7 @@ test: test_docker test_apptainer
 
 clean:
 	@docker rmi $(DOCKER_IMAGES)
-	@rm -f $(SVF_IMAGES)
+	@rm -f $(SIF_IMAGES)
 
 docker: $(TOOLS)
 
@@ -54,7 +54,7 @@ apptainer: $(SIF_IMAGES)
 
 $(SIF_IMAGES):
 	echo "Building $@"
-	@apptainer build $@ docker-daemon:$(DOCKER_IMAGE_BASE)/$(patsubst %.svf,%,$@)
+	@apptainer build $@ docker-daemon:$(DOCKER_IMAGE_BASE)/$(patsubst %.sif,%,$@)
 
 test_apptainer: $(SIF_IMAGES)
 	@echo "Testing apptainer image: $<"

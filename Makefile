@@ -69,7 +69,7 @@ test_docker:
 
 release: $(DOCKER_IMAGES)
 	for f in $(DOCKER_IMAGES); do \
-		@docker push $(IMAGE_REPOSITORY)/$(DOCKER_IMAGE_BASE)/$$f; \
+		docker push $(IMAGE_REPOSITORY)/$(DOCKER_IMAGE_BASE)/$$f; \
 	done
 
 # Apptainer

@@ -27,19 +27,21 @@ all: docker apptainer test
 
 help:
 	@echo "Targets: all clean test"
-	@echo "         docker clean_docker test_docker release_docker"
-	@echo "         apptainer clean_apptainer test_apptainer"
+	@echo "         docker docker_clean docker_test docker_release"
+	@echo "         apptainer apptainer_clean apptainer_test"
 	@echo
 	@echo "Docker containers:\n$(DOCKER_IMAGES)"
 	@echo
 	@echo "Apptainer images:\n$(SIF_IMAGES)"
 
-clean: clean_docker clean_apptainer
+clean: apptainer_clean docker_clean
 
-test: test_docker test_apptainer
+release: docker_release
+
+test: docker_test apptainer_test
 
 # Docker
-clean_docker:
+docker_clean:
 	for f in $(DOCKER_IMAGES); do \
 		docker rmi -f $(DOCKER_IMAGE_BASE)/$$f 2>/dev/null; \
 	done
@@ -61,19 +63,19 @@ $(TOOLS):
 		--build-arg RUNCMD="$@" \
 		.
 
-test_docker:
+docker_test:
 	for f in $(DOCKER_IMAGES); do \
 		echo "Testing docker image: $(DOCKER_IMAGE_BASE)/$$f"; \
 		docker run -t $(DOCKER_IMAGE_BASE)/$$f; \
 	done
 
-release: $(DOCKER_IMAGES)
+docker_release: $(DOCKER_IMAGES)
 	for f in $(DOCKER_IMAGES); do \
 		docker push $(IMAGE_REPOSITORY)/$(DOCKER_IMAGE_BASE)/$$f; \
 	done
 
 # Apptainer
-clean_apptainer:
+apptainer_clean:
 	@rm -f $(SIF_IMAGES)
 
 apptainer: $(SIF_IMAGES)
@@ -83,7 +85,7 @@ $(SIF_IMAGES):
 	@apptainer build $@ \
 		docker-daemon:$(DOCKER_IMAGE_BASE)/$(patsubst %.sif,%,$@)
 
-test_apptainer: $(SIF_IMAGES)
+apptainer_test: $(SIF_IMAGES)
 	for f in $(SIF_IMAGES); do \
 		echo "Testing Apptainer image: $$f"; \
 		apptainer run $$f; \

@@ -47,7 +47,6 @@ $(TOOLS):
 	@echo "Building Docker container $@"
 	@docker build \
 		-t $(DOCKER_IMAGE_BASE)/$@:$(DOCKER_TAG) \
-		-t $(DOCKER_IMAGE_BASE)/$@:latest \
 		$(DOCKER_BUILD_ARGS) \
 		--build-arg BASE_IMAGE=$(OS_BASE):$(OS_VER) \
 		--build-arg RUNCMD="$@" \

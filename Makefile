@@ -4,13 +4,8 @@ ORG_NAME := hihg-um
 OS_BASE ?= ubuntu
 OS_VER ?= 22.04
 
-USER ?= $$(USER)
-USERID ?= `id -u`
-USERGNAME ?= "adgc"
-USERGID ?= 5001
-
-IMAGE_REPOSITORY :=
-DOCKER_IMAGE_BASE := $(ORG_NAME)/$(USER)
+IMAGE_REPOSITORY ?=
+DOCKER_IMAGE_BASE := $(ORG_NAME)
 
 GIT_REV := $(shell git describe --tags --dirty)
 DOCKER_TAG ?= $(GIT_REV)
@@ -55,11 +50,6 @@ $(TOOLS):
 		-t $(DOCKER_IMAGE_BASE)/$@:latest \
 		$(DOCKER_BUILD_ARGS) \
 		--build-arg BASE_IMAGE=$(OS_BASE):$(OS_VER) \
-		--build-arg IMAGE_TOOLS="$(TOOLS)" \
-		--build-arg USERNAME=$(USER) \
-		--build-arg USERID=$(USERID) \
-		--build-arg USERGNAME=$(USERGNAME) \
-		--build-arg USERGID=$(USERGID) \
 		--build-arg RUNCMD="$@" \
 		.
 

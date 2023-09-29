@@ -1,51 +1,19 @@
+# SPDX-License-Identifier: GPL-2.0
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
 
-# SPDX-License-Identifier: GPL-2.0
-
-# List of analytics tools
-ARG IMAGE_TOOLS
-
-# user data provided by the host system via the make file
-# without these, the container will fail-safe and be unable to write output
-ARG USERNAME
-ARG USERID
-ARG USERGNAME
-ARG USERGID
-
 ARG RUNCMD
 
-# Put the user name and ID into the ENV, so the runtime inherits them
-ENV USERNAME=${USERNAME:-nouser} \
-        USERID=${USERID:-65533} \
-        USERGNAME=${USERGNAME:-users} \
-        USERGID=${USERGID:-nogroup}
-
-# match the building user. This will allow output only where the building
-# user has write permissions
-RUN groupadd -g $USERGID $USERGNAME && \
-	useradd -m -u $USERID -g $USERGID -g "users" $USERNAME && \
-	adduser $USERNAME $USERGNAME
-
 # Install OS updates, security fixes and utils, generic app dependencies
-# htslib is libhts3 in Ubuntu see https://github.com/samtools/htslib/
 RUN apt -y update -qq && apt -y upgrade && \
 	DEBIAN_FRONTEND=noninteractive apt -y install \
-		ca-certificates \
-		curl \
-		dirmngr \
-		ghostscript gnuplot \
-		less \
-		pkg-config \
-		software-properties-common \
-		strace wget xz-utils
+		ca-certificates curl
 
 # analytics package target - we want a new layer here, since different
-# dependencies will have to be installed, but we want a common base
-RUN DEBIAN_FRONTEND=noninteractive apt -y install ${RUNCMD}
-RUN echo "$RUNCMD \$@" > /entrypoint.sh && chmod +x /entrypoint.sh
+# dependencies will have to be installed, sharing the common base above
+RUN DEBIAN_FRONTEND=noninteractive apt -y install apt-utils $RUNCMD
 
-WORKDIR /app
-# we map the user owning the image so permissions for input/output will work
-USER $USERNAME
-ENTRYPOINT [ "bash", "/entrypoint.sh" ]
+# Create an entrypoint for the binary
+RUN echo "#!/bin/bash\n$RUNCMD \$@" > /entrypoint.sh && \
+	chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

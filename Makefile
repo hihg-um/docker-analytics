@@ -11,30 +11,39 @@ USERGID ?= 5001
 
 IMAGE_REPOSITORY :=
 DOCKER_IMAGE_BASE := $(ORG_NAME)/$(USER)
-DOCKER_TAG := latest
 
-# Use this for debugging builds. Turn off for a more slick build log
+GIT_REV := $(shell git describe --tags --dirty)
+DOCKER_TAG ?= $(GIT_REV)
+
 DOCKER_BUILD_ARGS :=
 
 TOOLS := bcftools plink2 samtools shapeit4 tabix vcftools
 SIF_IMAGES := $(TOOLS:=\:$(DOCKER_TAG).sif)
-#SIF_IMAGES := $(TOOLS)
 DOCKER_IMAGES := $(TOOLS:=\:$(DOCKER_TAG))
 
-.PHONY: clean docker test $(TOOLS)
+.PHONY: clean docker test $(TOOLS) $(DOCKER_IMAGES)
 
-all: docker test_docker apptainer test_apptainer
+all: docker apptainer test
 
 test: test_docker test_apptainer
 
-clean:
-	@docker rmi $(DOCKER_IMAGES)
+clean: clean_docker clean_apptainer
+
+clean_docker:
+	for f in $(DOCKER_IMAGES); do \
+		docker rmi -f $(DOCKER_IMAGE_BASE)/$$f 2>/dev/null; \
+	done
+
+clean_apptainer:
 	@rm -f $(SIF_IMAGES)
 
 docker: $(TOOLS)
 
 $(TOOLS):
-	@docker build -t $(DOCKER_IMAGE_BASE)/$@:$(DOCKER_TAG) \
+	@echo "Building $@"
+	@docker build \
+		-t $(DOCKER_IMAGE_BASE)/$@:$(DOCKER_TAG) \
+		-t $(DOCKER_IMAGE_BASE)/$@:latest \
 		$(DOCKER_BUILD_ARGS) \
 		--build-arg BASE_IMAGE=$(OS_BASE):$(OS_VER) \
 		--build-arg IMAGE_TOOLS="$(TOOLS)" \
@@ -45,9 +54,11 @@ $(TOOLS):
 		--build-arg RUNCMD="$@" \
 		.
 
-test_docker: $(TOOLS)
-	@echo "Testing docker image: $(DOCKER_IMAGE_BASE)/$<"
-	@docker run -it -v /mnt:/mnt $(DOCKER_IMAGE_BASE)/$< --version
+test_docker:
+	for f in $(DOCKER_IMAGES); do \
+		echo "Testing docker image: $(DOCKER_IMAGE_BASE)/$$f"; \
+		docker run -t $(DOCKER_IMAGE_BASE)/$$f; \
+	done
 
 apptainer: $(SIF_IMAGES)
 	make test_apptainer
@@ -57,8 +68,12 @@ $(SIF_IMAGES):
 	@apptainer build $@ docker-daemon:$(DOCKER_IMAGE_BASE)/$(patsubst %.sif,%,$@)
 
 test_apptainer: $(SIF_IMAGES)
-	@echo "Testing apptainer image: $<"
-	@apptainer run $< -v
+	for f in $(SIF_IMAGES); do \
+		echo "Testing apptainer image: $<"; \
+		apptainer run $$f; \
+	done
 
 release: $(DOCKER_IMAGES)
-	@docker push $(IMAGE_REPOSITORY)/$(ORG_NAME)/$(USER)/$@
+	for f in $(DOCKER_IMAGES); do \
+		@docker push $(IMAGE_REPOSITORY)/$(DOCKER_IMAGE_BASE)/$$f; \
+	done

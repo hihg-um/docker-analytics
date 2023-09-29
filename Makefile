@@ -49,7 +49,7 @@ docker_clean:
 docker: $(TOOLS)
 
 $(TOOLS):
-	@echo "Building $@"
+	@echo "Building Docker container $@"
 	@docker build \
 		-t $(DOCKER_IMAGE_BASE)/$@:$(DOCKER_TAG) \
 		-t $(DOCKER_IMAGE_BASE)/$@:latest \
@@ -65,7 +65,7 @@ $(TOOLS):
 
 docker_test:
 	for f in $(DOCKER_IMAGES); do \
-		echo "Testing docker image: $(DOCKER_IMAGE_BASE)/$$f"; \
+		echo "Testing Docker image: $(DOCKER_IMAGE_BASE)/$$f"; \
 		docker run -t $(DOCKER_IMAGE_BASE)/$$f; \
 	done
 
@@ -82,7 +82,7 @@ apptainer_clean:
 apptainer: $(SIF_IMAGES)
 
 $(SIF_IMAGES):
-	echo "Building $@"
+	@echo "Building Apptainer $@"
 	@apptainer build $@ \
 		docker-daemon:$(DOCKER_IMAGE_BASE)/$(patsubst %.sif,%,$@)
 

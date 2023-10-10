@@ -18,10 +18,10 @@ DOCKER_TAG ?= $(GIT_REV)
 DOCKER_BUILD_ARGS :=
 
 TOOLS := bcftools plink2 samtools shapeit4 tabix vcftools
-SIF_IMAGES := $(TOOLS:=\:$(DOCKER_TAG).sif)
 DOCKER_IMAGES := $(TOOLS:=\:$(DOCKER_TAG))
+SIF_IMAGES := $(TOOLS:=\:$(DOCKER_TAG).sif)
 
-.PHONY: clean docker test $(TOOLS) $(DOCKER_IMAGES)
+.PHONY: clean docker test $(DOCKER_IMAGES) $(TOOLS)
 
 all: docker apptainer test
 

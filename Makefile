@@ -77,7 +77,6 @@ docker_release: $(DOCKER_IMAGES)
 # Apptainer
 apptainer_clean:
 	@rm -f $(SIF_IMAGES)
-	@rm -f *.sif
 
 apptainer: $(SIF_IMAGES)
 

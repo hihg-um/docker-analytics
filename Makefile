@@ -9,12 +9,15 @@ IMAGE_REPOSITORY ?=
 TOOLS := bcftools plink2 samtools shapeit4 tabix vcftools
 
 DOCKER_BUILD_ARGS ?=
-DOCKER_TAG ?= $(shell git describe --tags --broken --dirty --all --long \
-			| sed "s,heads/,," | sed "s,tags/,,")
-DOCKER_BASE ?= $(shell basename `git remote --verbose | grep origin | \
-					grep fetch | cut -f2 | cut -d ' ' -f1` | sed 's/.git//')_base:$(DOCKER_TAG)
+DOCKER_TAG ?= $(shell git describe --tags --broken --dirty --all --long | \
+			sed "s,heads/,," | sed "s,tags/,,")
+DOCKER_BASE ?= $(patsubst docker-%,%,$(shell basename \
+		`git remote --verbose | grep origin | grep fetch | \
+		cut -f2 | cut -d ' ' -f1` | sed 's/.git//'))
 DOCKER_IMAGES := $(TOOLS:=\:$(DOCKER_TAG))
 SIF_IMAGES := $(TOOLS:=\:$(DOCKER_TAG).sif)
+
+IMAGE_TEST_ARGS ?=
 
 .PHONY: apptainer_clean apptainer_test \
 	docker_base docker_clean docker_test docker_release $(TOOLS)
@@ -50,9 +53,11 @@ docker: docker_base $(TOOLS)
 
 $(TOOLS):
 	@echo "Building Docker container: $@"
-	@docker build -t $(ORG_NAME)/$@:$(DOCKER_TAG) -f Dockerfile.analytics \
+	@docker build \
+		-f Dockerfile.$(DOCKER_BASE) \
+		-t $(ORG_NAME)/$@:$(DOCKER_TAG) \
 		$(DOCKER_BUILD_ARGS) \
-		--build-arg BASE_IMAGE=$(ORG_NAME)/$(DOCKER_BASE) \
+		--build-arg BASE_IMAGE=$(ORG_NAME)/$(DOCKER_BASE):$(DOCKER_TAG) \
 		--build-arg RUN_CMD=$@ \
 		.
 
@@ -60,8 +65,8 @@ $(TOOLS):
 		$(ORG_NAME)/$@:$(DOCKER_TAG) $(ORG_NAME)/$@:latest)
 
 docker_base:
-	@echo "Building Docker base: $(DOCKER_BASE)"
-	@docker build -t $(ORG_NAME)/$(DOCKER_BASE) \
+	@echo "Building Docker base: $(DOCKER_BASE):$(DOCKER_TAG)"
+	@docker build -t $(ORG_NAME)/$(DOCKER_BASE):$(DOCKER_TAG) \
 		$(DOCKER_BUILD_ARGS) \
 		--build-arg BASE_IMAGE=$(OS_BASE):$(OS_VER) \
 		.
@@ -73,7 +78,7 @@ docker_clean:
 			docker rmi -f $(ORG_NAME)/$$f:latest; \
 		fi \
 	done
-	@docker rmi -f $(ORG_NAME)/$(DOCKER_BASE)
+	@docker rmi -f $(ORG_NAME)/$(DOCKER_BASE):$(DOCKER_TAG)
 	@docker builder prune -f 2>/dev/null;
 
 docker_test: 
@@ -83,10 +88,10 @@ docker_test:
 			-v /etc/passwd:/etc/passwd:ro \
 			-v /etc/group:/etc/group:ro \
 			--user=$(shell echo `id -u`):$(shell echo `id -g`) \
-			$(ORG_NAME)/$$f; \
+			$(ORG_NAME)/$$f $(IMAGE_TEST_ARGS); \
 	done
 
-docker_release:
+docker_release: $(DOCKER_IMAGES)
 	@for f in $^; do \
 		docker push $(IMAGE_REPOSITORY)/$(ORG_NAME)/$$f; \
 	done
@@ -109,5 +114,5 @@ apptainer_clean:
 apptainer_test: $(SIF_IMAGES)
 	@for f in $^; do \
 		echo "Testing Apptainer: $$f"; \
-		apptainer run $$f; \
+		apptainer run $$f $(IMAGE_TEST_ARGS); \
 	done

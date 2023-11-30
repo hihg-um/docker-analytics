@@ -11,15 +11,17 @@ TOOLS := bcftools plink2 samtools shapeit4 tabix vcftools
 DOCKER_BUILD_ARGS ?=
 DOCKER_TAG ?= $(shell git describe --tags --broken --dirty --all --long \
 			| sed "s,heads/,," | sed "s,tags/,,")
+DOCKER_BASE ?= $(shell basename `git remote --verbose | grep origin | \
+					grep fetch | cut -f2 | cut -d ' ' -f1` | sed 's/.git//')_base:$(DOCKER_TAG)
 DOCKER_IMAGES := $(TOOLS:=\:$(DOCKER_TAG))
 SIF_IMAGES := $(TOOLS:=\:$(DOCKER_TAG).sif)
 
 .PHONY: apptainer_clean apptainer_test \
-	docker_clean docker_test docker_release $(TOOLS)
+	docker_base docker_clean docker_test docker_release $(TOOLS)
 
 help:
 	@echo "Targets: all build clean test release"
-	@echo "         docker docker_clean docker_test docker_release"
+	@echo "         docker docker_base docker_clean docker_test docker_release"
 	@echo "         apptainer apptainer_clean apptainer_test"
 	@echo
 	@echo "Docker container(s):"
@@ -44,26 +46,35 @@ release: docker_release
 test: docker_test apptainer_test
 
 # Docker
-docker: $(TOOLS)
+docker: docker_base $(TOOLS)
 
 $(TOOLS):
 	@echo "Building Docker container: $@"
-	@docker build -t $(ORG_NAME)/$@:$(DOCKER_TAG) \
+	@docker build -t $(ORG_NAME)/$@:$(DOCKER_TAG) -f Dockerfile.analytics \
 		$(DOCKER_BUILD_ARGS) \
-		--build-arg BASE_IMAGE=$(OS_BASE):$(OS_VER) \
+		--build-arg BASE_IMAGE=$(ORG_NAME)/$(DOCKER_BASE) \
 		--build-arg RUN_CMD=$@ \
 		.
+
 	$(if $(shell git fetch; git diff @{upstream}),,docker tag \
 		$(ORG_NAME)/$@:$(DOCKER_TAG) $(ORG_NAME)/$@:latest)
 
+docker_base:
+	@echo "Building Docker base: $(DOCKER_BASE)"
+	@docker build -t $(ORG_NAME)/$(DOCKER_BASE) \
+		$(DOCKER_BUILD_ARGS) \
+		--build-arg BASE_IMAGE=$(OS_BASE):$(OS_VER) \
+		.
+
 docker_clean:
 	@for f in $(TOOLS); do \
-		echo "Cleaning up Docker container: $$f:$(DOCKER_TAG)"; \
 		docker rmi -f $(ORG_NAME)/$$f:$(DOCKER_TAG) 2>/dev/null; \
 		if [ -z "`git fetch; git diff @{upstream}`" ]; then \
 			docker rmi -f $(ORG_NAME)/$$f:latest; \
 		fi \
 	done
+	@docker rmi -f $(ORG_NAME)/$(DOCKER_BASE)
+	@docker builder prune -f 2>/dev/null;
 
 docker_test: 
 	@for f in $(DOCKER_IMAGES); do \
@@ -89,8 +100,10 @@ $(SIF_IMAGES):
 
 apptainer_clean:
 	@for f in $(SIF_IMAGES); do \
-		printf "Cleaning up Apptainer: $$f\n"; \
-		rm -f $$f; \
+		if [ -f "$$f" ]; then \
+			printf "Cleaning up Apptainer: $$f\n"; \
+			rm -f $$f; \
+		fi \
 	done
 
 apptainer_test: $(SIF_IMAGES)

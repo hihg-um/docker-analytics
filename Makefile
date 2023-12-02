@@ -17,7 +17,7 @@ DOCKER_BASE ?= $(patsubst docker-%,%,$(shell basename \
 DOCKER_IMAGES := $(TOOLS:=\:$(DOCKER_TAG))
 SIF_IMAGES := $(TOOLS:=\:$(DOCKER_TAG).sif)
 
-IMAGE_TEST_ARGS ?=
+IMAGE_TEST := /test.sh
 
 .PHONY: apptainer_clean apptainer_test \
 	docker_base docker_clean docker_test docker_release $(TOOLS)
@@ -87,8 +87,9 @@ docker_test:
 		docker run -t \
 			-v /etc/passwd:/etc/passwd:ro \
 			-v /etc/group:/etc/group:ro \
+			--entrypoint=$(IMAGE_TEST) \
 			--user=$(shell echo `id -u`):$(shell echo `id -g`) \
-			$(ORG_NAME)/$$f $(IMAGE_TEST_ARGS); \
+			$(ORG_NAME)/$$f; \
 	done
 
 docker_release: $(DOCKER_IMAGES)
@@ -114,5 +115,5 @@ apptainer_clean:
 apptainer_test: $(SIF_IMAGES)
 	@for f in $^; do \
 		echo "Testing Apptainer: $$f"; \
-		apptainer run $$f $(IMAGE_TEST_ARGS); \
+		apptainer exec $$f $(IMAGE_TEST); \
 	done

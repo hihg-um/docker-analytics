@@ -8,6 +8,8 @@ ARG RUN_CMD
 # dependencies will have to be installed, sharing the common base above
 RUN DEBIAN_FRONTEND=noninteractive apt -y install apt-utils $RUN_CMD
 
+COPY src/test/$RUN_CMD.sh /test.sh
+
 # Create an entrypoint for the binary
 RUN echo "#!/bin/bash\n$RUN_CMD \$@" > /entrypoint.sh && \
 	chmod +x /entrypoint.sh

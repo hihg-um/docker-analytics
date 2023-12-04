@@ -81,7 +81,7 @@ docker_clean:
 	@docker rmi -f $(ORG_NAME)/$(DOCKER_BASE):$(DOCKER_TAG)
 	@docker builder prune -f 2>/dev/null;
 
-docker_test: 
+docker_test:
 	@for f in $(DOCKER_IMAGES); do \
 		echo "Testing Docker container: $(ORG_NAME)/$$f"; \
 		docker run -t \

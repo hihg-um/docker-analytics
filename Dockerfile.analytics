@@ -13,6 +13,5 @@ COPY src/test/$RUN_CMD.sh ${TEST}
 RUN chmod +x ${TEST}
 
 ARG ENTRY="/entrypoint.sh"
-# Create an entrypoint for the binary
 RUN echo "#!/bin/bash\n$RUN_CMD \$@" > ${ENTRY} && chmod +x ${ENTRY}
 ENTRYPOINT [ "/entrypoint.sh" ]

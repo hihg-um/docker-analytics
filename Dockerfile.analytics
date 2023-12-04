@@ -10,8 +10,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt -y install apt-utils $RUN_CMD
 
 ARG TEST="/test.sh"
 COPY src/test/$RUN_CMD.sh ${TEST}
-RUN chmod +x ${TEST}
+RUN chmod ugo+rx ${TEST}
 
 ARG ENTRY="/entrypoint.sh"
-RUN echo "#!/bin/bash\n$RUN_CMD \$@" > ${ENTRY} && chmod +x ${ENTRY}
+RUN echo "#!/bin/bash\n$RUN_CMD \$@" > ${ENTRY} && chmod ugo+rx ${ENTRY}
 ENTRYPOINT [ "/entrypoint.sh" ]

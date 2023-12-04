@@ -6,7 +6,7 @@ OS_VER ?= 23.10
 
 IMAGE_REPOSITORY ?=
 
-TOOLS := bcftools plink2 samtools shapeit4 tabix vcftools
+TOOLS := bcftools beagle plink2 samtools shapeit4 tabix vcftools
 
 DOCKER_BUILD_ARGS ?=
 DOCKER_TAG ?= $(shell git describe --tags --broken --dirty --all --long | \

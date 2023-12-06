@@ -52,7 +52,7 @@ test: docker_test apptainer_test
 docker: docker_base $(TOOLS)
 
 $(TOOLS):
-	@echo "Building Docker container: $@"
+	@echo "Building Docker container: $(ORG_NAME)/$@:$(DOCKER_TAG)"
 	@docker build \
 		-f Dockerfile.$(DOCKER_BASE) \
 		-t $(ORG_NAME)/$@:$(DOCKER_TAG) \
@@ -65,7 +65,7 @@ $(TOOLS):
 		tag $(ORG_NAME)/$@:$(DOCKER_TAG) $(ORG_NAME)/$@:latest)
 
 docker_base:
-	@echo "Building Docker base: $(DOCKER_BASE):$(DOCKER_TAG)"
+	@echo "Building Docker base: $(ORG_NAME)/$(DOCKER_BASE):$(DOCKER_TAG)"
 	@docker build -t $(ORG_NAME)/$(DOCKER_BASE):$(DOCKER_TAG) \
 		$(DOCKER_BUILD_ARGS) \
 		--build-arg BASE_IMAGE=$(OS_BASE):$(OS_VER) \
@@ -84,7 +84,7 @@ docker_clean:
 
 docker_test:
 	@for f in $(DOCKER_IMAGES); do \
-		echo "Testing Docker container: $(ORG_NAME)/$$f"; \
+		echo; echo "Testing Docker container: $(ORG_NAME)/$$f"; \
 		docker run -t \
 			-v /etc/passwd:/etc/passwd:ro \
 			-v /etc/group:/etc/group:ro \

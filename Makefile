@@ -6,7 +6,7 @@ OS_VER ?= 24.04
 
 IMAGE_REPOSITORY ?=
 
-TOOLS := bcftools beagle plink2 samtools shapeit4 tabix vcftools
+TOOLS := bcftools beagle plink1.9 plink2 samtools shapeit4 tabix vcftools
 
 DOCKER_BUILD_ARGS ?=
 DOCKER_TAG ?= $(shell git describe --tags --broken --dirty --all --long | \
@@ -27,7 +27,7 @@ IMAGE_TEST := /test.sh
 help:
 	@echo "Targets: all build clean test release"
 	@echo "         docker docker_base docker_clean docker_test docker_release"
-	@echo "         apptainer apptainer_clean apptainer_test"
+	@echo "         apptainer apptainer_clean apptainer_realclean apptainer_test"
 	@echo
 	@echo "Docker container(s):"
 	@for f in $(DOCKER_IMAGES); do \
@@ -119,6 +119,9 @@ apptainer_clean:
 			rm -f $$f; \
 		fi \
 	done
+
+apptainer_realclean:
+	@rm -f *.sif
 
 apptainer_distclean:
 	@rm -f *.sif

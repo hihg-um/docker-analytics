@@ -8,15 +8,18 @@ IMAGE_REPOSITORY ?=
 
 TOOLS := bcftools beagle plink1.9 plink2 samtools shapeit4 tabix vcftools
 
-DOCKER_BUILD_ARGS ?=
-DOCKER_TAG ?= $(shell git describe --tags --broken --dirty --all --long | \
+GIT_TAG=$(shell git describe --tags --exact-match)
+GIT_REV=$(shell git describe --broken --dirty --all --long | \
 		sed "s,heads/,," | sed "s,tags/,," | \
-		sed "s,remotes/pull/.*/,," \
-		)_$(shell uname -m)_$(shell uname -s | \
-		tr '[:upper:]' '[:lower:]')
-DOCKER_BASE ?= $(patsubst docker-%,%,$(shell basename \
+		sed "s,remotes/pull/.*/,," )
+GIT_REPO_TAIL ?= $(patsubst docker-%,%,$(shell basename \
 		`git remote --verbose | grep origin | grep fetch | \
 		cut -f2 | cut -d ' ' -f1` | sed 's/.git//'))
+
+
+DOCKER_ARCH=$(shell uname -m)_$(shell uname -s | tr '[:upper:]' '[:lower:]')
+DOCKER_TAG ?= $(GIT_REV)_$(DOCKER_ARCH)
+
 DOCKER_IMAGES := $(TOOLS:=\:$(DOCKER_TAG))
 SIF_IMAGES := $(TOOLS:=_$(DOCKER_TAG).sif)
 
@@ -57,21 +60,30 @@ docker: docker_base $(TOOLS)
 $(TOOLS):
 	@echo "Building Docker container: $(ORG_NAME)/$@:$(DOCKER_TAG)"
 	@docker build \
-		-f Dockerfile.$(DOCKER_BASE) \
+		$(DOCKER_BUILD_OPTS) \
+		-f Dockerfile.$(GIT_REPO_TAIL) \
 		-t $(ORG_NAME)/$@:$(DOCKER_TAG) \
-		$(DOCKER_BUILD_ARGS) \
-		--build-arg BASE_IMAGE=$(ORG_NAME)/$(DOCKER_BASE):$(DOCKER_TAG) \
+		--build-arg BASE=$(ORG_NAME)/$(GIT_REPO_TAIL):$(DOCKER_TAG) \
 		--build-arg RUN_CMD=$@ \
+		--build-arg BUILD_TIME="$(shell date)" \
+		--build-arg DOCKER_ARCH=$(DOCKER_ARCH) \
+		--build-arg GIT_REV=$(GIT_REV) \
+		--build-arg GIT_TAG=$(GIT_TAG) \
+		$(DOCKER_BUILD_ARGS) \
 		.
 
 	$(if $(shell git fetch 2>&1; git diff @{upstream} 2>&1),,docker \
 		tag $(ORG_NAME)/$@:$(DOCKER_TAG) $(ORG_NAME)/$@:latest)
 
 docker_base:
-	@echo "Building Docker base: $(ORG_NAME)/$(DOCKER_BASE):$(DOCKER_TAG)"
-	@docker build -t $(ORG_NAME)/$(DOCKER_BASE):$(DOCKER_TAG) \
-		$(DOCKER_BUILD_ARGS) \
-		--build-arg BASE_IMAGE=$(OS_BASE):$(OS_VER) \
+	@echo "Building Docker base: $(ORG_NAME)/$(GIT_REPO_TAIL):$(DOCKER_TAG)"
+	@docker build -t $(ORG_NAME)/$(GIT_REPO_TAIL):$(DOCKER_TAG) \
+		$(DOCKER_BUILD_OPTS) \
+		--build-arg BASE=$(OS_BASE):$(OS_VER) \
+		--build-arg BUILD_TIME="$(shell date)" \
+		--build-arg DOCKER_ARCH=$(DOCKER_ARCH) \
+		--build-arg GIT_REV=$(GIT_REV) \
+		--build-arg GIT_TAG=$(GIT_TAG) \
 		.
 
 docker_clean:

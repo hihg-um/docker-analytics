@@ -1,10 +1,27 @@
 # SPDX-License-Identifier: GPL-2.0
-ARG BASE_IMAGE
-FROM $BASE_IMAGE
+ARG BASE
+FROM $BASE
 
-LABEL org.opencontainers.image.description="Genomics Analysis Toolchain"
-
+# build-args
+ARG BASE
 ARG RUN_CMD
+ARG BUILD_TIME
+ARG DOCKER_ARCH
+ARG GIT_TAG
+ARG GIT_REV
+
+LABEL org.opencontainers.image.authors="kms309@miami.edu,sxd1425@miami.edu"
+LABEL org.opencontainers.image.base.digest=""
+LABEL org.opencontainers.image.base.name="$BASE"
+LABEL org.opencontainers.image.description="${RUN_CMD}"
+LABEL org.opencontainers.image.created="$BUILD_TIME"
+LABEL org.opencontainers.image.url="ghcr.io/hihg-um/${RUN_CMD}:${GIT_TAG}-${GIT_REV}_${DOCKER_ARCH}"
+LABEL org.opencontainers.image.source="https://github.com/hihg-um/docker-analytics"
+LABEL org.opencontainers.image.version="$GIT_TAG"
+LABEL org.opencontainers.image.revision="$GIT_REV"
+LABEL org.opencontainers.image.vendor="The University of Miami Miller School of Medicine, Hussman Institute for Human Genomics"
+LABEL org.opencontainers.image.licenses="GPL-2.0"
+LABEL org.opencontainers.image.title="Genomics Analysis Tools"
 
 # analytics package target - we want a new layer here, since different
 # dependencies will have to be installed, sharing the common base above

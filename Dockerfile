@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-2.0
+# SPDX-License-Identifier: GPL-3.0
 ARG BASE
 FROM $BASE
 
@@ -18,8 +18,8 @@ LABEL org.opencontainers.image.url="ghcr.io/hihg-um/${RUN_CMD}:${GIT_TAG}-${GIT_
 LABEL org.opencontainers.image.source="https://github.com/hihg-um/docker-analytics"
 LABEL org.opencontainers.image.version="$GIT_TAG"
 LABEL org.opencontainers.image.revision="$GIT_REV"
-LABEL org.opencontainers.image.vendor="The University of Miami Miller School of Medicine, Hussman Institute for Human Genomics"
-LABEL org.opencontainers.image.licenses="GPL-2.0"
+LABEL org.opencontainers.image.vendor="The Hussman Institute for Human Genomics, The University of Miami Miller School of Medicine"
+LABEL org.opencontainers.image.licenses="GPL-3.0"
 LABEL org.opencontainers.image.title="Genomics Analysis Tools"
 
 # Install OS updates, security fixes and utils, generic app dependencies

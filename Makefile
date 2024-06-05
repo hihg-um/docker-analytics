@@ -4,7 +4,7 @@ ORG_NAME ?= hihg-um
 OS_BASE ?= ubuntu
 OS_VER ?= 24.04
 
-IMAGE_REPOSITORY ?=
+IMAGE_REPO ?= ghcr.io
 
 TOOLS := bcftools beagle plink1.9 plink2 samtools shapeit4 tabix vcftools
 
@@ -18,7 +18,7 @@ GIT_REPO_TAIL = $(patsubst docker-%,%,$(shell basename \
 GIT_SYNC ?= ($(shell git fetch 2>&1 && git diff @{upstream} 2>&1),)
 
 DOCKER_BUILD_OPTS ?= "--progress=plain"
-DOCKER_BUILD_TIME := "$(shell date)"
+DOCKER_BUILD_TIME := "$(shell date -u)"
 DOCKER_ARCH = $(shell uname -m)_$(shell uname -s | tr '[:upper:]' '[:lower:]')
 DOCKER_TAG ?= $(GIT_REV)_$(DOCKER_ARCH)
 
@@ -67,10 +67,11 @@ $(TOOLS):
 		-t $(ORG_NAME)/$@:$(DOCKER_TAG) \
 		--build-arg BASE=$(ORG_NAME)/$(GIT_REPO_TAIL):$(DOCKER_TAG) \
 		--build-arg RUN_CMD=$@ \
-		--build-arg BUILD_TIME=$(DOCKER_BUILD_TIME) \
-		--build-arg DOCKER_ARCH=$(DOCKER_ARCH) \
 		--build-arg GIT_REV=$(GIT_REV) \
 		--build-arg GIT_TAG=$(GIT_TAG) \
+		--build-arg BUILD_ARCH=$(DOCKER_ARCH) \
+		--build-arg BUILD_REPO=$(IMAGE_REPO)/$(ORG_NAME) \
+		--build-arg BUILD_TIME=$(DOCKER_BUILD_TIME) \
 		.
 	$(if $(GIT_SYNC),, \
 		docker tag $(ORG_NAME)/$@:$(DOCKER_TAG) $(ORG_NAME)/$@:latest)
@@ -80,10 +81,12 @@ docker_base:
 	@docker build -t $(ORG_NAME)/$(GIT_REPO_TAIL):$(DOCKER_TAG) \
 		$(DOCKER_BUILD_OPTS) \
 		--build-arg BASE=$(OS_BASE):$(OS_VER) \
-		--build-arg BUILD_TIME=$(DOCKER_BUILD_TIME) \
-		--build-arg DOCKER_ARCH=$(DOCKER_ARCH) \
 		--build-arg GIT_REV=$(GIT_REV) \
 		--build-arg GIT_TAG=$(GIT_TAG) \
+		--build-arg BUILD_ARCH=$(DOCKER_ARCH) \
+		--build-arg BUILD_REPO=$(IMAGE_REPO)/$(ORG_NAME) \
+		--build-arg BUILD_TIME=$(DOCKER_BUILD_TIME) \
+		--build-arg URL_NAME=$(GIT_REPO_TAIL) \
 		.
 
 docker_clean:
@@ -107,8 +110,8 @@ docker_test:
 docker_release:
 	@for f in $(GIT_REPO_TAIL):$(DOCKER_TAG) $(DOCKER_IMAGES); do \
 		docker tag $(ORG_NAME)/$$f \
-			$(IMAGE_REPOSITORY)/$(ORG_NAME)/$$f; \
-		docker push $(IMAGE_REPOSITORY)/$(ORG_NAME)/$$f; \
+			$(IMAGE_REPO)/$(ORG_NAME)/$$f; \
+		docker push $(IMAGE_REPO)/$(ORG_NAME)/$$f; \
 	done
 
 # Apptainer

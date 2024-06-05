@@ -9,8 +9,11 @@ This container packages several common analytics tools that
 are packaged by the Ubuntu Linux distribution maintainers:
 
  - bcftools
- - plink
+ - beagle
+ - plink1.9
  - plink2
  - samtools
+ - shapeit4
+ - tabix
  - vcftools
 

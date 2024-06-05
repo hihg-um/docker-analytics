@@ -22,6 +22,7 @@ DOCKER_BUILD_TIME := "$(shell date -u)"
 DOCKER_ARCH = $(shell uname -m)_$(shell uname -s | tr '[:upper:]' '[:lower:]')
 DOCKER_TAG ?= $(GIT_REV)_$(DOCKER_ARCH)
 
+DOCKER_BASE= $(ORG_NAME)/$(GIT_REPO_TAIL):$(DOCKER_TAG)
 DOCKER_IMAGES := $(TOOLS:=\:$(DOCKER_TAG))
 SIF_IMAGES := $(TOOLS:=_$(DOCKER_TAG).sif)
 
@@ -65,7 +66,7 @@ $(TOOLS):
 		$(DOCKER_BUILD_OPTS) \
 		-f Dockerfile.$(GIT_REPO_TAIL) \
 		-t $(ORG_NAME)/$@:$(DOCKER_TAG) \
-		--build-arg BASE=$(ORG_NAME)/$(GIT_REPO_TAIL):$(DOCKER_TAG) \
+		--build-arg BASE=$(DOCKER_BASE) \
 		--build-arg RUN_CMD=$@ \
 		--build-arg GIT_REV=$(GIT_REV) \
 		--build-arg GIT_TAG=$(GIT_TAG) \
@@ -77,8 +78,8 @@ $(TOOLS):
 		docker tag $(ORG_NAME)/$@:$(DOCKER_TAG) $(ORG_NAME)/$@:latest)
 
 docker_base:
-	@echo "Building Docker base: $(ORG_NAME)/$(GIT_REPO_TAIL):$(DOCKER_TAG)"
-	@docker build -t $(ORG_NAME)/$(GIT_REPO_TAIL):$(DOCKER_TAG) \
+	@echo "Building Docker base: $(DOCKER_BASE)"
+	@docker build -t $(DOCKER_BASE) \
 		$(DOCKER_BUILD_OPTS) \
 		--build-arg BASE=$(OS_BASE):$(OS_VER) \
 		--build-arg GIT_REV=$(GIT_REV) \
@@ -88,13 +89,14 @@ docker_base:
 		--build-arg BUILD_TIME=$(DOCKER_BUILD_TIME) \
 		--build-arg URL_NAME=$(GIT_REPO_TAIL) \
 		.
+	@docker inspect $(DOCKER_BASE)
 
 docker_clean:
 	@docker builder prune -f 1> /dev/null 2>& 1
 	@for f in $(TOOLS); do \
 		docker rmi -f $(ORG_NAME)/$$f:$(DOCKER_TAG) 1> /dev/null 2>& 1; \
 	done
-	@docker rmi -f $(ORG_NAME)/$(GIT_REPO_TAIL):$(DOCKER_TAG) 1> /dev/null 2>& 1
+	@docker rmi -f $(DOCKER_BASE) 1> /dev/null 2>& 1
 
 docker_test:
 	@for f in $(DOCKER_IMAGES); do \

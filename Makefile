@@ -128,7 +128,7 @@ apptainer: $(SIF_IMAGES)
 
 $(SIF_IMAGES):
 	@for f in $(DOCKER_IMAGES); do \
-		echo "Building Apptainer: $@"; \
+		echo "Building Apptainer: $$f"; \
 		apptainer pull docker-daemon:$(DOCKER_REPO)/$$f; \
 	done
 

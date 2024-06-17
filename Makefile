@@ -82,6 +82,7 @@ $(TOOLS):
 		--build-arg BASE=$(DOCKER_BASE) \
 		--build-arg RUN_CMD=$@ \
 		--build-arg BUILD_REPO=$(DOCKER_REPO)/$@:$(DOCKER_TAG) \
+		--build-arg BUILD_TIME=$(DOCKER_BUILD_TIME) \
 		.
 	$(if $(GIT_LATEST), \
 		@docker tag \
@@ -96,7 +97,6 @@ docker_base:
 		--build-arg GIT_REV=$(GIT_REV) \
 		--build-arg GIT_TAG=$(GIT_TAG) \
 		--build-arg BUILD_REPO=$(DOCKER_BASE) \
-		--build-arg BUILD_TIME=$(DOCKER_BUILD_TIME) \
 		.
 	@docker inspect $(DOCKER_BASE)
 

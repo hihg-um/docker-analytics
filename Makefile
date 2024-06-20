@@ -17,8 +17,8 @@ GIT_REPO := $(shell git remote get-url origin | sed 's,git@,,' | sed 's,:,/,')
 GIT_REPO_TAIL := $(shell basename $(GIT_REPO) | sed 's/.git//' | \
 			sed 's/docker-//')
 #GIT_SYNC ?= ($(shell git fetch 2>&1 && git diff @{upstream} 2>&1),)
-GIT_TAG_HEAD ?= $(shell git describe --exact-match --tags --dirty)
-GIT_TAG_LAST ?= $(shell git describe --abbrev=0 --tags)
+GIT_TAG_HEAD ?= $(shell git describe --exact-match --tags --dirty 2>/dev/null)
+GIT_TAG_LAST ?= $(shell git describe --abbrev=0 --always --tags)
 
 ifeq ($(GIT_TAG_HEAD),$(GIT_TAG_LAST))
         GIT_LATEST := true

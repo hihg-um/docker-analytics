@@ -13,7 +13,9 @@ ARG BUILD_REPO
 RUN apt -y update -qq && apt -y upgrade && \
 	DEBIAN_FRONTEND=noninteractive apt -y install \
 	--no-install-recommends --no-install-suggests \
-	ca-certificates
+		ca-certificates \
+	&& \
+	apt -y clean && rm -rf /var/lib/apt/lists/* /tmp/*
 
 LABEL org.opencontainers.image.authors="kms309@miami.edu,sxd1425@miami.edu"
 LABEL org.opencontainers.image.base.digest=""

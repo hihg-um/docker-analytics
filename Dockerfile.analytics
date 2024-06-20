@@ -10,17 +10,21 @@ ARG BUILD_TIME
 
 # analytics package target - we want a new layer here, since different
 # dependencies will have to be installed, sharing the common base above
-RUN DEBIAN_FRONTEND=noninteractive apt -y install \
-	--no-install-recommends --no-install-suggests $RUN_CMD
+RUN apt -y update -qq && DEBIAN_FRONTEND=noninteractive apt -y install \
+	--no-install-recommends --no-install-suggests \
+		${RUN_CMD} \
+	&& \
+	apt -y clean && rm -rf /var/lib/apt/lists/* /tmp/*
 
 COPY --chmod=0555 src/test/${RUN_CMD}.sh /test.sh
 
 ARG ENTRY="/entrypoint.sh"
-RUN echo "#!/bin/bash\n$RUN_CMD \$@" > ${ENTRY} && chmod ugo+rx ${ENTRY}
+RUN echo "#!/bin/bash\n${RUN_CMD} \$@" > ${ENTRY} && chmod ugo+rx ${ENTRY}
 ENTRYPOINT [ "/entrypoint.sh" ]
 
 LABEL org.opencontainers.image.base.digest=""
 LABEL org.opencontainers.image.base.name="$BASE"
 LABEL org.opencontainers.image.created="$BUILD_TIME"
-LABEL org.opencontainers.image.description="HIHG ${RUN_CMD}"
+LABEL org.opencontainers.image.description="Distro-packaged Genomic Analysis tools"
+LABEL org.opencontainers.image.title="HIHG: ${RUN_CMD}"
 LABEL org.opencontainers.image.url="${BUILD_REPO}"
